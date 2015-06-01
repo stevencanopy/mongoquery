@@ -1,6 +1,8 @@
 import re
 import types
 
+from numbers import Number
+
 
 class QueryError(Exception):
     pass
@@ -44,7 +46,13 @@ class Query(object):
     def _process_condition(self, operator, condition, entry):
         if operator.startswith("$"):
             try:
-                return getattr(self, "_" + operator[1:])(condition, entry)
+                op = getattr(self, "_" + operator[1:])
+
+                # Added to support queries on lists of dicts
+                if type(entry) == list and not Query._is_array_op(operator):
+                    return any(op(condition, en) for en in entry)
+                else:
+                    return op(condition, entry)
             except AttributeError:
                 raise QueryError("{!r} operator isn't supported".format(operator))
         else:
@@ -74,19 +82,19 @@ class Query(object):
     ######################
 
     def _gt(self, condition, entry):
-        return entry > condition
+        return isinstance(entry, Number) and entry > condition
 
     def _gte(self, condition, entry):
-        return entry >= condition
+        return isinstance(entry, Number) and entry >= condition
 
     def _in(self, condition, entry):
         return entry in condition
 
     def _lt(self, condition, entry):
-        return entry < condition
+        return isinstance(entry, Number) and entry < condition
 
     def _lte(self, condition, entry):
-        return entry <= condition
+        return isinstance(entry, Number) and entry <= condition
 
     def _ne(self, condition, entry):
         return entry != condition
@@ -215,6 +223,10 @@ class Query(object):
     #################
     # Array operators
     #################
+
+    @classmethod
+    def _is_array_op(cls, op):
+        return op in ['$all', '$elemMatch', '$size']
 
     def _all(self, condition, entry):
         return all(

@@ -340,3 +340,23 @@ class TestQuery(TestCase):
                 collection=inventory
             )
         )
+
+    def test_array_sub_document(self):
+        self.assertEqual(
+            [{'a': [{'b': 10}]}],
+            self._query(
+                {'a.b': {'$gte': 10}},
+                collection=[
+                    {'a': [{'b': 10}]}
+                ]
+            )
+        )
+        self.assertEqual(
+            [],
+            self._query(
+                {'a.b': {'$gte': 10}},
+                collection=[
+                    {'a': [{'b': 5}]}
+                ]
+            )
+        )        
