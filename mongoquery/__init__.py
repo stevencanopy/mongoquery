@@ -16,13 +16,13 @@ class Query(object):
         return self._match(self._definition, entry)
 
     def _match(self, condition, entry):
-        if type(condition) == dict:
+        if isinstance(condition, dict):
             return all(
                 self._process_condition(sub_operator, sub_condition, entry)
                 for sub_operator, sub_condition in condition.items()
             )
         else:
-            if type(entry) == list:
+            if isinstance(entry, list):
                 return condition in entry
             else:
                 return condition == entry
@@ -32,7 +32,7 @@ class Query(object):
             return entry
         if entry is None:
             return entry
-        if type(entry) == list:
+        if isinstance(entry, list):
             try:
                 index = int(path[0])
                 return self._extract(entry[index], path[1:])
@@ -49,14 +49,14 @@ class Query(object):
                 op = getattr(self, "_" + operator[1:])
 
                 # Added to support queries on lists of dicts
-                if type(entry) == list and not Query._is_array_op(operator):
+                if isinstance(entry, list) and not Query._is_array_op(operator):
                     return any(op(condition, en) for en in entry)
                 else:
                     return op(condition, entry)
             except AttributeError:
                 raise QueryError("{!r} operator isn't supported".format(operator))
         else:
-            if type(condition) == dict and "$exists" in condition:
+            if isinstance(condition, dict) and "$exists" in condition:
                 if condition["$exists"] != (operator in entry):
                     return False
 
@@ -107,7 +107,7 @@ class Query(object):
     ###################
 
     def _and(self, condition, entry):
-        if type(condition) == list:
+        if isinstance(condition, list):
             return all(
                 self._match(sub_condition, entry)
                 for sub_condition in condition
@@ -119,7 +119,7 @@ class Query(object):
         )
 
     def _nor(self, condition, entry):
-        if type(condition) == list:
+        if isinstance(condition, list):
             return all(
                 not self._match(sub_condition, entry)
                 for sub_condition in condition
@@ -134,7 +134,7 @@ class Query(object):
         return not self._match(condition, entry)
 
     def _or(self, condition, entry):
-        if type(condition) == list:
+        if isinstance(condition, list):
             return any(
                 self._match(sub_condition, entry)
                 for sub_condition in condition
@@ -251,7 +251,7 @@ class Query(object):
                 )
             )
 
-        if type(entry) == list:
+        if isinstance(entry, list):
             return len(entry) == condition
 
         return False

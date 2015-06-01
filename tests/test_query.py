@@ -359,4 +359,5 @@ class TestQuery(TestCase):
                     {'a': [{'b': 5}]}
                 ]
             )
-        )        
+        )    
+
